@@ -1,33 +1,11 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
+# Icon glyphs — Font Awesome codepoints via Hack Nerd Font (already installed:
+# ~/Library/Fonts/HackNerdFont-*.ttf). Exported for the same reason as colors.sh.
 
-# General Icons
-LOADING=􀖇
-APPLE=􀣺
-PREFERENCES=􀺽
-ACTIVITY=􀒓
-LOCK=􀒳
-MAIL=􀍜
-MAIL_OPEN=􀍜
-BELL=􀋚
-BELL_DOT=􀝗
+export ICON_FONT="Hack Nerd Font"
 
-# Git Icons
-GIT_ISSUE=􀍷
-GIT_DISCUSSION=􀒤
-GIT_PULL_REQUEST=􀙡
-GIT_COMMIT=􀡚
-GIT_INDICATOR=􀂓
-
-# Spotify Icons
-SPOTIFY_BACK=􀊎
-SPOTIFY_PLAY_PAUSE=􀊈
-SPOTIFY_NEXT=􀊐
-SPOTIFY_SHUFFLE=􀊝
-SPOTIFY_REPEAT=􀊞
-
-# Yabai Icons
-YABAI_STACK=􀏭
-YABAI_FULLSCREEN_ZOOM=􀏜
-YABAI_PARENT_ZOOM=􀥃
-YABAI_FLOAT=􀢌
-YABAI_GRID=􀧍
+export DIVIDER=""          # nf-fa-angle_right
+export ICON_CPU=""         # nf-fa-microchip
+export ICON_WIFI_ON=""     # nf-fa-wifi
+export ICON_WIFI_OFF=""    # nf-fa-ban
+export ICON_CLOCK=""       # nf-fa-clock_o

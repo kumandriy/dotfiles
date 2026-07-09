@@ -1,205 +1,248 @@
-after-startup-command = ['exec-and-forget sketchybar']
+# ~/.config/aerospace/aerospace.toml
+# Rebuilt from scratch — clean AeroSpace + SketchyBar integration
+# Docs: https://nikitabobko.github.io/AeroSpace/guide
 
-# Notify Sketchybar about workspace change
-exec-on-workspace-change = ['/bin/bash', '-c',
-  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE',
-  'exec-and-forget borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0'
+config-version = 2
+
+# Keep all 10 workspaces alive (even empty/invisible) so the SketchyBar
+# indicator always shows the full set, not just visited ones.
+persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+
+# ---------------------------------------------------------------------------
+# Startup
+# ---------------------------------------------------------------------------
+after-login-command = []
+
+after-startup-command = [
+  # JankyBorders has built-in already-running detection, so this is safe on
+  # every AeroSpace (re)start.
+  'exec-and-forget borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0',
+  # SketchyBar also detects if it's already running.
+  'exec-and-forget sketchybar',
 ]
 
-# Start AeroSpace at login
-start-at-login = false
+start-at-login = true
 
-# Normalizations. See: https://nikitabobko.github.io/AeroSpace/guide#normalization
+# ---------------------------------------------------------------------------
+# SketchyBar integration (Callbacks)
+# See: https://nikitabobko.github.io/AeroSpace/guide#callbacks
+# ---------------------------------------------------------------------------
+
+# Fires when the focused workspace changes (e.g. alt-1..9, alt-tab, mission
+# control style switch). Drives the workspace indicator + refreshes the
+# per-workspace app list in the bar.
+exec-on-workspace-change = [
+  '/bin/bash', '-c',
+  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE',
+]
+
+# Fires on every focused window/workspace change (covers focus moving between
+# windows within a workspace, and windows disappearing/closing since focus
+# then moves elsewhere). Keeps the live app-membership list in sync.
+on-focus-changed = [
+  'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change',
+]
+
+# ---------------------------------------------------------------------------
+# Normalizations
+# ---------------------------------------------------------------------------
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
-# See: https://nikitabobko.github.io/AeroSpace/guide#layouts
-# The 'accordion-padding' specifies the size of accordion padding
-# You can set 0 to disable the padding feature
-accordion-padding = 300
-
-# Possible values: tiles|accordion
+# ---------------------------------------------------------------------------
+# Layout
+# ---------------------------------------------------------------------------
+accordion-padding = 30
 default-root-container-layout = 'tiles'
-
-# Possible values: horizontal|vertical|auto
-# 'auto' means: wide monitor (anything wider than high) gets horizontal orientation,
-#               tall monitor (anything higher than wide) gets vertical orientation
 default-root-container-orientation = 'auto'
 
-# Mouse follows focus when focused monitor changes
-# Drop it from your config, if you don't like this behavior
-# See https://nikitabobko.github.io/AeroSpace/guide#on-focus-changed-callbacks
-# See https://nikitabobko.github.io/AeroSpace/commands#move-mouse
-# Fallback value (if you omit the key): on-focused-monitor-changed = []
 on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
-# You can effectively turn off macOS "Hide application" (cmd-h) feature by toggling this flag
-# Useful if you don't use this macOS feature, but accidentally hit cmd-h or cmd-alt-h key
-# Also see: https://nikitabobko.github.io/AeroSpace/goodness#disable-hide-app
 automatically-unhide-macos-hidden-apps = false
 
-# [[on-window-detected]]
-# if.app-id = 'com.apple.systempreferences'
-# if.app-name-regex-substring = 'settings'
-# if.window-title-regex-substring = 'substring'
-# if.workspace = 'workspace-name'
-# if.during-aerospace-startup = true
-# check-further-callbacks = true
-# run = ['layout floating', 'move-node-to-workspace S']  # The callback itself
+key-mapping.preset = 'qwerty'
 
-[[on-window-detected]]
-if.app-name-regex-substring = 'telegram'
-run = 'layout floating'
+# Gaps: outer.top is sized to clear the docked SketchyBar bar (height 34 +
+# breathing room) so tiled windows never render underneath it.
+gaps.inner.horizontal = 20
+gaps.inner.vertical = 20
+gaps.outer.left = 20
+gaps.outer.bottom = 20
+gaps.outer.top = 35
+gaps.outer.right = 20
 
-[[on-window-detected]]
-if.app-name-regex-substring = 'finder'
-run = 'layout floating'
+# ---------------------------------------------------------------------------
+# on-window-detected: per-app rules + keep SketchyBar's window list fresh
+# whenever a brand new window shows up.
+# ---------------------------------------------------------------------------
+on-window-detected = [
+  { if.app-name-regex-substring = 'finder', run = 'layout floating' },
+  { if.app-id = 'com.apple.systempreferences', run = 'layout floating' },
+  { if.app-id = 'com.apple.ActivityMonitor', run = 'layout floating' },
+  { if.app-id = 'com.apple.Preview', run = 'layout floating' },
+  { if.app-id = 'com.mitchellh.ghostty', run = 'layout tiling' },
+  { if.app-id = 'com.1password.1password', run = 'layout floating' },
+  { if.app-id = 'org.yanex.marta', run = 'layout floating' },
+  {
+    check-further-callbacks = true,
+    run = 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change',
+  },
+]
 
-[[on-window-detected]]
-if.app-name-regex-substring = 'safari'
-run = 'layout floating'
- 
-[[on-window-detected]]
-if.app-name-regex-substring = 'camera'
-run = 'layout floating'
-
-[[on-window-detected]]
-if.app-name-regex-substring = 'elgato'
-run = 'layout floating'
-
-[[on-window-detected]]
-if.app-name-regex-substring = 'dicord'
-run = 'layout floating'
-
-[[on-window-detected]]
-if.app-name-regex-substring = 'mail'
-run = 'layout floating'
-
-[[on-window-detected]]
-if.app-name-regex-substring = 'trello'
-run = 'layout floating'
-
-[[on-window-detected]]
-if.app-name-regex-substring = 'quicktime'
-run = 'layout floating'
-
-[[on-window-detected]]
-if.app-name-regex-substring = 'discord'
-run = 'layout floating'
-
-# Possible values: (qwerty|dvorak)
-# See https://nikitabobko.github.io/AeroSpace/guide#key-mapping
-[key-mapping]
-preset = 'qwerty'
-
-# Gaps between windows (inner-*) and between monitor edges (outer-*).
-# Possible values:
-# - Constant:     gaps.outer.top = 8
-# - Per monitor:  gaps.outer.top = [{ monitor.main = 16 }, { monitor."some-pattern" = 32 }, 24]
-#                 In this example, 24 is a default value when there is no match.
-#                 Monitor pattern is the same as for 'workspace-to-monitor-force-assignment'.
-#                 See: https://nikitabobko.github.io/AeroSpace/guide#assign-workspaces-to-monitors
-[gaps]
-inner.horizontal = 20
-inner.vertical =   20
-outer.left =       20
-outer.bottom =     20
-outer.top =        10
-outer.right =      80
-
-# 'main' binding mode declaration
-# See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
-# 'main' binding mode must be always presented
-# Fallback value (if you omit the key): mode.main.binding = {}
+# ---------------------------------------------------------------------------
+# Key bindings
+# ---------------------------------------------------------------------------
 [mode.main.binding]
 
-# All possible keys:
-# - Letters.        a, b, c, ..., z
-# - Numbers.        0, 1, 2, ..., 9
-# - Keypad numbers. keypad0, keypad1, keypad2, ..., keypad9
-# - F-keys.         f1, f2, ..., f20
-# - Special keys.   minus, equal, period, comma, slash, backslash, quote, semicolon, backtick,
-#                   leftSquareBracket, rightSquareBracket, space, enter, esc, backspace, tab
-# - Keypad special. keypadClear, keypadDecimalMark, keypadDivide, keypadEnter, keypadEqual,
-#                   keypadMinus, keypadMultiply, keypadPlus
-# - Arrows.         left, down, up, right
+  # Open a new terminal window (Ghostty)
+  alt-enter = '''exec-and-forget osascript -e '
+  tell application "Ghostty"
+      activate
+  end tell'
+  '''
 
-# All possible modifiers: cmd, alt, ctrl, shift
+  # For situations when Option based shortcuts start printing symbols
+  # cmd-alt-slash = 'layout tiles horizontal vertical'
+  # cmd-alt-comma = 'layout accordion horizontal vertical'
+  alt-slash = 'layout tiles horizontal vertical'
+  alt-comma = 'layout accordion horizontal vertical'
 
-# All possible commands: https://nikitabobko.github.io/AeroSpace/commands
+  # Focus
+  # For situations when Option based shortcuts start printing symbols
+  # cmd-alt-h = 'focus left'
+  # cmd-alt-j = 'focus down'
+  # cmd-alt-k = 'focus up'
+  # cmd-alt-l = 'focus right'
 
-# See: https://nikitabobko.github.io/AeroSpace/commands#exec-and-forget
-# You can uncomment the following lines to open up terminal with alt + enter shortcut (like in i3)
-# alt-enter = '''exec-and-forget osascript -e '
-# tell application "Terminal"
-#     do script
-#     activate
-# end tell'
-# '''
+  alt-h = 'focus left'
+  alt-j = 'focus down'
+  alt-k = 'focus up'
+  alt-l = 'focus right'
 
-alt-ctrl-shift-f = 'fullscreen'
-alt-ctrl-f = 'layout floating tiling'
+  # Move window within workspace
+  # NOTE: same OS-level collision as the number row (see comment below) — a
+  # recent macOS update appears to have changed event-tap priority so
+  # Option+Shift+letter combos race against the OS's own character
+  # composition and sometimes lose, typing a character instead of firing the
+  # binding. cmd added for the same reason as the workspace bindings below.
 
-alt-shift-left = 'join-with left'
-alt-shift-down = 'join-with down'
-alt-shift-up = 'join-with up'
-alt-shift-right = 'join-with right'
+# For situations when Option based shortcuts start printing symbols
+  # cmd-alt-shift-h = 'move left'
+  # cmd-alt-shift-j = 'move down'
+  # cmd-alt-shift-k = 'move up'
+  # cmd-alt-shift-l = 'move right'
 
-# See: https://nikitabobko.github.io/AeroSpace/commands#layout
-alt-slash = 'layout tiles horizontal vertical'
-alt-comma = 'layout accordion horizontal vertical'
+  alt-shift-h = 'move left'
+  alt-shift-j = 'move down'
+  alt-shift-k = 'move up'
+  alt-shift-l = 'move right'
+  # Resize
+  # For situations when Option based shortcuts start printing symbols
+  # cmd-alt-minus = 'resize smart -50'
+  # cmd-alt-equal = 'resize smart +50'
+  alt-minus = 'resize smart -50'
+  alt-equal = 'resize smart +50'
 
-# See: https://nikitabobko.github.io/AeroSpace/commands#focus
-alt-h = 'focus left'
-alt-j = 'focus down'
-alt-k = 'focus up'
-alt-l = 'focus right'
-
-# See: https://nikitabobko.github.io/AeroSpace/commands#move
-alt-shift-h = 'move left'
-alt-shift-j = 'move down'
-alt-shift-k = 'move up'
-alt-shift-l = 'move right'
-
-# See: https://nikitabobko.github.io/AeroSpace/commands#resize
-alt-shift-minus = 'resize smart -50'
-alt-shift-equal = 'resize smart +50'
-
-# See: https://nikitabobko.github.io/AeroSpace/commands#workspace
-alt-1 = 'workspace 1'
-alt-2 = 'workspace 2'
-alt-3 = 'workspace 3'
-alt-4 = 'workspace 4'
-
-# See: https://nikitabobko.github.io/AeroSpace/commands#move-node-to-workspace
-alt-shift-1 = 'move-node-to-workspace 1 --focus-follows-window'
-alt-shift-2 = 'move-node-to-workspace 2 --focus-follows-window'
-alt-shift-3 = 'move-node-to-workspace 3 --focus-follows-window'
-alt-shift-4 = 'move-node-to-workspace 4 --focus-follows-window'
-
-alt-tab = 'workspace-back-and-forth'
-alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
-
-# See: https://nikitabobko.github.io/AeroSpace/commands#mode
-alt-shift-semicolon = 'mode service'
-alt-shift-enter = 'mode apps'
-
-alt-t = 'exec-and-forget open -a /Applications/Telegram.app'
-alt-a = 'exec-and-forget open -a /Applications/Arc.app'
-alt-o = 'exec-and-forget open -a /Applications/Obsidian.app'
-alt-g = 'exec-and-forget open -a /Applications/Ghostty.app'
-alt-s = 'exec-and-forget open -a /Applications/Safari.app'
-alt-q = 'exec-and-forget open -a /System/Applications/QuickTime Player.app'
-alt-w = 'exec-and-forget open -a /Applications/WezTerm.app'
+  # Switch workspace — cmd+alt+1..9, cmd+alt+0 = workspace 10
+  #
+  # NOTE: plain alt+number is intentionally NOT used here. macOS reserves
+  # Option+digit system-wide for typing special characters (¡™£¢∞§¶•ª º) via
+  # the keyboard layout's own character table, and on many layouts/machines
+  # that OS-level character substitution wins the race against AeroSpace's
+  # event tap for the number row specifically (this is a widely reported
+  # AeroSpace behavior, not a bug in this config — letters don't have the
+  # same universal reserved mapping, which is why alt+h/j/k/l work fine but
+  # alt+1..9 silently type a symbol instead of switching workspaces). Adding
+  # cmd to the chord guarantees the OS treats it as a pure shortcut and
+  # never attempts character composition, regardless of keyboard layout.
+ 
+  # For situations when Option based shortcuts start printing symbols
+  # cmd-alt-1 = 'workspace 1'
+  # cmd-alt-2 = 'workspace 2'
+  # cmd-alt-3 = 'workspace 3'
+  # cmd-alt-4 = 'workspace 4'
+  # cmd-alt-5 = 'workspace 5'
+  # cmd-alt-6 = 'workspace 6'
+  # cmd-alt-7 = 'workspace 7'
+  # cmd-alt-8 = 'workspace 8'
+  # cmd-alt-9 = 'workspace 9'
+  # cmd-alt-0 = 'workspace 10'
 
 
-# 'service' binding mode declaration.
-# See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
+  alt-1 = 'workspace 1'
+  alt-2 = 'workspace 2'
+  alt-3 = 'workspace 3'
+  alt-4 = 'workspace 4'
+  alt-5 = 'workspace 5'
+  alt-6 = 'workspace 6'
+  alt-7 = 'workspace 7'
+  alt-8 = 'workspace 8'
+  alt-9 = 'workspace 9'
+  alt-0 = 'workspace 10'
+  # Move focused window to workspace — cmd+alt+shift+1..9, cmd+alt+shift+0 = workspace 10
+  # Each binding also nudges SketchyBar directly (belt-and-suspenders on top
+  # of on-focus-changed) so the app list updates the instant a window moves.
+ 
+  # For situations when Option based shortcuts start printing symbols
+  # cmd-alt-shift-1 = ['move-node-to-workspace 1', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-2 = ['move-node-to-workspace 2', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-3 = ['move-node-to-workspace 3', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-4 = ['move-node-to-workspace 4', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-5 = ['move-node-to-workspace 5', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-6 = ['move-node-to-workspace 6', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-7 = ['move-node-to-workspace 7', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-8 = ['move-node-to-workspace 8', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-9 = ['move-node-to-workspace 9', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  # cmd-alt-shift-0 = ['move-node-to-workspace 10', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  
+  alt-shift-1 = ['move-node-to-workspace 1', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-2 = ['move-node-to-workspace 2', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-3 = ['move-node-to-workspace 3', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-4 = ['move-node-to-workspace 4', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-5 = ['move-node-to-workspace 5', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-6 = ['move-node-to-workspace 6', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-7 = ['move-node-to-workspace 7', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-8 = ['move-node-to-workspace 8', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-9 = ['move-node-to-workspace 9', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+  alt-shift-0 = ['move-node-to-workspace 10', 'exec-and-forget /opt/homebrew/bin/sketchybar --trigger aerospace_windows_change']
+
+
+  alt-tab = 'workspace-back-and-forth'
+  alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+
+  alt-shift-semicolon = 'mode service'
+
+  # Screenshot to clipboard
+  alt-shift-s = 'exec-and-forget screencapture -i -c'
+
+[workspace-to-monitor-force-assignment]
+  1 = 'main'
+  2 = 'main'
+  3 = 'main'
+  4 = 'main'
+  5 = 'main'
+  6 = ['secondary', 'main']
+  7 = ['secondary', 'main']
+  8 = ['secondary', 'main']
+  9 = ['secondary', 'main']
+  10 = ['secondary', 'main']
+
 [mode.service.binding]
-esc = ['reload-config', 'mode main']
-r = ['flatten-workspace-tree', 'mode main'] # reset layout
-f = ['layout floating tiling', 'mode main'] # Toggle between floating and tiling layout
-backspace = ['close-all-windows-but-current', 'mode main']
+  esc = ['reload-config', 'mode main']
+  r = ['flatten-workspace-tree', 'mode main']
+  f = ['layout floating tiling', 'mode main']
+  backspace = ['close-all-windows-but-current', 'mode main']
 
-[mode.apps.binding]
-alt-w = ['exec-and-forget open -a /Applications/WezTerm.app', 'mode main']
+  alt-shift-h = ['join-with left', 'mode main']
+  alt-shift-j = ['join-with down', 'mode main']
+  alt-shift-k = ['join-with up', 'mode main']
+  alt-shift-l = ['join-with right', 'mode main']
+  # For situations when Option based shortcuts start printing symbols
+  # cmd-alt-shift-h = ['join-with left', 'mode main']
+  # cmd-alt-shift-j = ['join-with down', 'mode main']
+  # cmd-alt-shift-k = ['join-with up', 'mode main']
+  # cmd-alt-shift-l = ['join-with right', 'mode main']
+
+  down = 'volume down'
+  up = 'volume up'
+  shift-down = ['volume set 0', 'mode main']

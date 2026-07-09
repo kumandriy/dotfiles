@@ -1,62 +1,60 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-source "$HOME/.config/sketchybar/colors.sh" # Loads all defined colors
-source "$HOME/.config/sketchybar/icons.sh" # Loads all defined icons
+# ~/.config/sketchybar/sketchybarrc
+# Rebuilt from scratch. Item/plugin/event-driven model:
+#   items/*.sh   -> declare bar items (left/right, styling, click actions)
+#   plugins/*.sh -> shell scripts invoked by sketchybar events to update items
+#
+# Docs: https://felixkratz.github.io/SketchyBar/
 
-ITEM_DIR="$HOME/.config/sketchybar/items" # Directory where the items are configured
-PLUGIN_DIR="$HOME/.config/sketchybar/plugins" # Directory where all the plugin scripts are stored
+source "$HOME/.config/sketchybar/colors.sh"
+source "$HOME/.config/sketchybar/icons.sh"
 
-FONT="SF Pro" # Needs to have Regular, Bold, Semibold, Heavy and Black variants
-SPACE_CLICK_SCRIPT="yabai -m space --focus \$SID 2>/dev/null" # The script that is run for clicking on space components
+export ITEM_DIR="$HOME/.config/sketchybar/items"
+export PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+export FONT="SF Pro"
 
-PADDINGS=3 # All paddings use this value (icon, label, background)
+PADDINGS=6
 
-POPUP_BORDER_WIDTH=2
-POPUP_CORNER_RADIUS=11
+##### Bar appearance: docked flush at the top of the screen #####
+sketchybar --bar \
+  position=top \
+  height=34 \
+  color=$BAR_COLOR \
+  border_width=0 \
+  corner_radius=0 \
+  y_offset=0 \
+  margin=0 \
+  padding_left=10 \
+  padding_right=10 \
+  sticky=on \
+  blur_radius=25 \
+  shadow=off \
+  \
+  --default \
+  updates=when_shown \
+  icon.font="$ICON_FONT:Regular:15.0" \
+  icon.color=$ICON_COLOR \
+  icon.padding_left=$PADDINGS \
+  icon.padding_right=$PADDINGS \
+  label.font="$FONT:Semibold:13.0" \
+  label.color=$LABEL_COLOR \
+  label.padding_left=$PADDINGS \
+  label.padding_right=$PADDINGS \
+  background.padding_left=4 \
+  background.padding_right=4
 
-SHADOW=on
+##### Left: workspaces + live app list for the active workspace #####
+source "$ITEM_DIR/aerospace.sh"
 
-# Setting up the general bar appearance and default values
-sketchybar --bar     height=50                                         \
-                     color=$BAR_COLOR                                  \
-                     shadow=$SHADOW                                    \
-                     position=right                                     \
-                     sticky=on                                         \
-                     padding_right=18                                  \
-                     padding_left=18                                   \
-                     corner_radius=9                                   \
-                     y_offset=10                                       \
-                     margin=10                                         \
-                     blur_radius=20                                    \
-                                                                       \
-           --default updates=when_shown                                \
-                     icon.font="$FONT:Bold:14.0"                       \
-                     icon.color=$ICON_COLOR                            \
-                     icon.padding_left=$PADDINGS                       \
-                     icon.padding_right=$PADDINGS                      \
-                     label.font="$FONT:Semibold:13.0"                  \
-                     label.color=$LABEL_COLOR                          \
-                     label.padding_left=$PADDINGS                      \
-                     label.padding_right=$PADDINGS                     \
-                     background.padding_right=$PADDINGS                \
-                     background.padding_left=$PADDINGS                 \
-                     popup.background.border_width=2                   \
-                     popup.background.corner_radius=11                 \
-                     popup.background.border_color=$POPUP_BORDER_COLOR \
-                     popup.background.color=$POPUP_BACKGROUND_COLOR    \
-                     popup.background.shadow.drawing=$SHADOW
+##### Right: system status, right-to-left visual order = cpu, wifi, volume, battery, clock #####
+source "$ITEM_DIR/clock.sh"
+source "$ITEM_DIR/battery.sh"
+source "$ITEM_DIR/volume.sh"
+# source "$ITEM_DIR/wifi.sh"
+source "$ITEM_DIR/cpu.sh"
 
-# Left
-source "$ITEM_DIR/apple.sh"
-source "$ITEM_DIR/spaces.sh"
-
-# Center
-# source "$ITEM_DIR/spotify.sh"
-
-# Right
-source "$ITEM_DIR/calendar.sh"
-
-############## FINALIZING THE SETUP ##############
+##### Finalize #####
 sketchybar --update
 
-echo "sketchybar configuation loaded.."
+echo "sketchybar configuration loaded"
