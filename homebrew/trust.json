@@ -1,0 +1,14 @@
+{
+  "trustedtaps": [
+    "adembc/tap",
+    "anomalyco/tap",
+    "derailed/k9s",
+    "dotenvx/brew",
+    "felixkratz/formulae",
+    "go-task/tap",
+    "mhaeuser/mhaeuser",
+    "nikitabobko/tap",
+    "siderolabs/tap",
+    "warrensbox/tap"
+  ]
+}
